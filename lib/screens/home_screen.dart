@@ -440,44 +440,60 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Widget _buildPromotionalBanners() {
-    return Container(
-      height: 200,
-      margin: const EdgeInsets.symmetric(vertical: 24),
-      child: PageView.builder(
-        controller: _bannerController,
-        itemCount: _promotionImages.length,
-        onPageChanged: (index) {
-          setState(() {
-            _currentBannerIndex = index;
-          });
-        },
-        itemBuilder: (context, index) {
-          return Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              color: Colors.grey[300],
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: Image.network(
-                _promotionImages[index],
-                fit: BoxFit.cover,
-                width: double.infinity,
-                errorBuilder: (context, error, stackTrace) {
-                  return Center(
-                    child: Icon(
-                      Icons.error_outline,
-                      size: 48,
-                      color: Colors.grey[600],
-                    ),
-                  );
-                },
-              ),
-            ),
-          );
-        },
-      ),
+    return Column(
+      children: [
+        Container(
+          height: 200,
+          margin: const EdgeInsets.symmetric(vertical: 24),
+          child: PageView.builder(
+            controller: _bannerController,
+            itemCount: _promotionImages.length,
+            onPageChanged: (index) {
+              setState(() {
+                _currentBannerIndex = index;
+              });
+            },
+            itemBuilder: (context, index) {
+              return Card(
+                clipBehavior: Clip.antiAlias,
+                margin: const EdgeInsets.symmetric(horizontal: 16),
+                child: Image.network(
+                  _promotionImages[index],
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Center(
+                      child: Icon(
+                        Icons.error_outline,
+                        size: 48,
+                        color: Colors.grey[600],
+                      ),
+                    );
+                  },
+                ),
+              );
+            },
+          ),
+        ),
+        if (_promotionImages.length > 1)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(_promotionImages.length, (index) {
+              return Container(
+                width: 8.0,
+                height: 8.0,
+                margin:
+                    const EdgeInsets.symmetric(vertical: 10.0, horizontal: 2.0),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: _currentBannerIndex == index
+                      ? Theme.of(context).colorScheme.primary
+                      : Colors.grey.withOpacity(0.5),
+                ),
+              );
+            }),
+          ),
+      ],
     );
   }
 
@@ -531,153 +547,246 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
+  Widget _buildWelcomeHeader(ThemeData theme) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Добро пожаловать в',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: theme.colorScheme.onSurface.withOpacity(0.7),
+                    ),
+                  ),
+                  Text(
+                    'EcoPack',
+                    style: theme.textTheme.headlineLarge?.copyWith(
+                      height: 1.2,
+                    ),
+                  ),
+                ],
+              ),
+              CircleAvatar(
+                radius: 30,
+                backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
+                child: _profileImageUrl != null
+                    ? ClipOval(
+                        child: Image.network(
+                          'https://back.wastefree247.com/public/$_profileImageUrl',
+                          width: 60,
+                          height: 60,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => Icon(
+                              Icons.person,
+                              color: theme.colorScheme.primary),
+                        ),
+                      )
+                    : Icon(Icons.person, color: theme.colorScheme.primary),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAddOrderCard(ThemeData theme) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Card(
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                  builder: (context) => const SelectOfferScreen()),
+            );
+          },
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  theme.colorScheme.primary,
+                  theme.colorScheme.secondary,
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Готовы сделать мир чище?',
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Оформите заказ на вывоз мусора',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: Colors.white.withOpacity(0.9),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 16),
+                const Icon(Icons.arrow_forward_ios,
+                    color: Colors.white, size: 24),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAddressCard(ThemeData theme) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Card(
+        child: InkWell(
+          onTap: () async {
+            final result = await showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+              ),
+              builder: (context) => AddressesBottomSheet(
+                addresses: _userAddresses,
+                onAddressChanged: () => Navigator.of(context).pop(true),
+              ),
+            );
+            if (result == true) {
+              await _fetchHomeData();
+            }
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              children: [
+                Icon(Icons.location_on_outlined,
+                    color: theme.colorScheme.primary, size: 32),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Ваш адрес',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurface.withOpacity(0.6),
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      if (_addressesLoading)
+                        const LinearProgressIndicator()
+                      else if (_userAddresses.isNotEmpty)
+                        Text(
+                          '${_userAddresses[0]['street_number']}, д. ${_userAddresses[0]['building_number']}',
+                          style: theme.textTheme.titleMedium,
+                          overflow: TextOverflow.ellipsis,
+                        )
+                      else
+                        Text(
+                          'Добавьте свой адрес',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.arrow_forward_ios, size: 16),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _mainContent(BuildContext context) {
     final theme = Theme.of(context);
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // 1. Application Logo
+          // 1. Logo
           Padding(
             padding: const EdgeInsets.all(24.0),
-            child: Column(
-              children: [
-                Container(
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withOpacity(0.08),
-                    shape: BoxShape.circle,
-                  ),
-                  padding: const EdgeInsets.all(24),
-                  child: Icon(
-                    Icons.eco,
-                    size: 64,
-                    color: theme.colorScheme.primary,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'EcoPack',
-                  style: theme.textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: theme.colorScheme.primary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // 2. Address Section
-          if (!_addressesLoading && _isLoggedIn && _userAddresses.isNotEmpty)
-            InkWell(
-              onTap: () async {
-                final result = await showModalBottomSheet(
-                  context: context,
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.vertical(
-                      top: Radius.circular(20),
-                    ),
-                  ),
-                  builder: (context) => AddressesBottomSheet(
-                    addresses: _userAddresses,
-                    onAddressChanged: () {
-                      Navigator.of(context).pop(true);
-                    },
-                  ),
-                );
-
-                if (result == true) {
-                  await _fetchHomeData();
-                }
-              },
+            child: Center(
               child: Container(
-                padding: const EdgeInsets.all(16),
-                margin: const EdgeInsets.symmetric(horizontal: 16),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.surface,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
+                  color: theme.colorScheme.primary.withOpacity(0.08),
+                  shape: BoxShape.circle,
                 ),
-                child: Row(
-                  children: [
-                    Icon(Icons.location_on, color: theme.colorScheme.primary),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Ваш адрес',
-                            style: TextStyle(
-                              color: theme.colorScheme.onSurface.withOpacity(
-                                0.6,
-                              ),
-                              fontSize: 12,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            _userAddresses.isNotEmpty
-                                ? '${_userAddresses[0]['street_number']}, д. ${_userAddresses[0]['building_number']}, кв. ${_userAddresses[0]['apartment_number']}'
-                                : '',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Icon(Icons.arrow_forward_ios, size: 16),
-                  ],
+                padding: const EdgeInsets.all(24),
+                child: Icon(
+                  Icons.eco,
+                  size: 64,
+                  color: theme.colorScheme.primary,
                 ),
               ),
             ),
+          ),
 
-          // 3. Profile Picture Slider
-          _buildPromotionalBanners(),
+          // 2. App Name
+          Center(
+            child: Text(
+              'EcoPack',
+              style: theme.textTheme.headlineMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.primary,
+              ),
+            ),
+          ),
 
-          // 4. Second Logo (Smaller)
+          const SizedBox(height: 24),
+
+          // 3. Addresses
+          if (_isLoggedIn) ...[
+            _buildAddressCard(theme),
+            const SizedBox(height: 16),
+          ],
+
+          // 4. Promotional Banners
+          if (_promotionImages.isNotEmpty) _buildPromotionalBanners(),
+
+          // 5. Logo (Second)
           Center(
             child: Icon(Icons.eco, size: 40, color: theme.colorScheme.primary),
           ),
           const SizedBox(height: 24),
 
-          // 5. Add Order Button
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => const SelectOfferScreen(),
-                  ),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: const Text(
-                'Оформить заказ',
-                style: TextStyle(fontSize: 16),
-              ),
-            ),
-          ),
+          // 6. Add Order
+          _buildAddOrderCard(theme),
 
-          // 6. Working Hours
+          const SizedBox(height: 16),
+
+          // 7. Working Hours
           _buildWorkingHours(),
 
-          // 7. Support Button (Telegram)
+          // 8. Customer Service Phone Telegram
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16.0),
             child: TextButton.icon(
               onPressed: () async {
                 final phone = (_customerServicePhone ?? '+963997240528');
@@ -687,8 +796,7 @@ class _HomeScreenState extends State<HomeScreen>
                 } catch (e) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('Не удалось открыть Telegram'),
-                    ),
+                        content: Text('Не удалось открыть Telegram')),
                   );
                 }
               },
@@ -822,8 +930,11 @@ class _HomeScreenState extends State<HomeScreen>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
+      backgroundColor: theme.colorScheme.background,
       appBar: AppBar(
-        title: const Text('EcoPack'),
+        title: const Text(''), // Title is now in the body
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         actions: [
           Builder(
             builder: (context) => badges.Badge(

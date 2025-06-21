@@ -1,17 +1,17 @@
-import 'package:flutter/material.dart';
+import 'dart:convert';
 import 'package:dgis_flutter/dgis_flutter.dart' as dgis;
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:lectures/env.dart';
 
 class DGisLocationPicker extends StatefulWidget {
   final double? initialLat;
   final double? initialLng;
-  final void Function(double lat, double lng) onPicked;
 
   const DGisLocationPicker({
     super.key,
     this.initialLat,
     this.initialLng,
-    required this.onPicked,
   });
 
   @override
@@ -61,11 +61,26 @@ class _DGisLocationPickerState extends State<DGisLocationPicker> {
                 try {
                   final currentPosition =
                       await _mapController.getCameraPosition();
-                  widget.onPicked(
-                    currentPosition.latitude,
-                    currentPosition.longitude,
-                  );
-                  Navigator.of(context).pop();
+                  final url =
+                      'https://catalog.api.2gis.com/3.0/items/by_point?lat=${currentPosition.latitude}&lon=${currentPosition.longitude}&key=${Env.dgApiKey}';
+                  final response = await http.get(Uri.parse(url));
+
+                  Map<String, dynamic> result = {
+                    'lat': currentPosition.latitude,
+                    'lng': currentPosition.longitude,
+                  };
+
+                  if (response.statusCode == 200) {
+                    print('2GIS API Response: ${response.body}');
+                    final data = json.decode(response.body);
+                    final items = data['result']?['items'] as List?;
+                    if (items != null && items.isNotEmpty) {
+                      result['street'] =
+                          items.first['address_name']?.split(',').first;
+                      result['building'] = items.first['building_name'];
+                    }
+                  }
+                  Navigator.of(context).pop(result);
                 } catch (e) {
                   print("Error getting current camera position: $e");
                   ScaffoldMessenger.of(context).showSnackBar(

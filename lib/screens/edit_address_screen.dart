@@ -69,20 +69,27 @@ class _EditAddressScreenState extends State<EditAddressScreen> {
   }
 
   Future<void> _pickLocationOnMap() async {
-    await Navigator.of(context).push(
+    final result = await Navigator.of(context).push<Map<String, dynamic>>(
       MaterialPageRoute(
         builder: (context) => DGisLocationPicker(
-          initialLat: _lat ?? 55.7558,
-          initialLng: _long ?? 37.6173,
-          onPicked: (pickedLat, pickedLng) {
-            setState(() {
-              _lat = pickedLat;
-              _long = pickedLng;
-            });
-          },
+          initialLat: _lat,
+          initialLng: _long,
         ),
       ),
     );
+
+    if (result == null) return;
+
+    setState(() {
+      _lat = result['lat'];
+      _long = result['lng'];
+      if (result['street'] != null) {
+        _streetController.text = result['street'];
+      }
+      if (result['building'] != null) {
+        _buildingController.text = result['building'];
+      }
+    });
   }
 
   Future<void> _useCurrentLocation() async {

@@ -38,6 +38,12 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
   bool _showAddLocationForm = false;
   bool _locationsLoading = true;
 
+  // Add controllers for the text fields
+  late TextEditingController _buildingController;
+  late TextEditingController _streetController;
+  late TextEditingController _apartmentController;
+  late TextEditingController _detailsController;
+
   @override
   void initState() {
     super.initState();
@@ -52,6 +58,21 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
     } else {
       _fetchOffers();
     }
+    // Initialize controllers
+    _buildingController = TextEditingController();
+    _streetController = TextEditingController();
+    _apartmentController = TextEditingController();
+    _detailsController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    // Dispose controllers
+    _buildingController.dispose();
+    _streetController.dispose();
+    _apartmentController.dispose();
+    _detailsController.dispose();
+    super.dispose();
   }
 
   Future<void> _fetchOffers() async {
@@ -201,20 +222,27 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
   ];
 
   Future<void> _pickLocation() async {
-    await Navigator.of(context).push(
+    final result = await Navigator.of(context).push<Map<String, dynamic>>(
       MaterialPageRoute(
         builder: (context) => DGisLocationPicker(
           initialLat: lat ?? 55.7558,
           initialLng: lng ?? 37.6173,
-          onPicked: (pickedLat, pickedLng) {
-            setState(() {
-              lat = pickedLat;
-              lng = pickedLng;
-            });
-          },
         ),
       ),
     );
+
+    if (result == null) return;
+
+    setState(() {
+      lat = result['lat'];
+      lng = result['lng'];
+      if (result['street'] != null) {
+        _streetController.text = result['street'];
+      }
+      if (result['building'] != null) {
+        _buildingController.text = result['building'];
+      }
+    });
   }
 
   Future<void> _useCurrentLocation() async {
@@ -372,10 +400,11 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
       payload.addAll({
         'lat': lat,
         'long': lng,
-        'building_number': buildingNumber,
-        'street_number': streetNumber,
-        'apartment_number': apartmentNumber,
-        'details': details,
+        'building_number': _buildingController.text,
+        'street_number': _streetController.text,
+        'apartment_number': _apartmentController.text,
+        'details':
+            _detailsController.text.isNotEmpty ? _detailsController.text : null,
       });
     }
     try {
@@ -992,39 +1021,43 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
                     ),
                     const SizedBox(height: 16),
                     TextFormField(
+                      controller: _buildingController,
                       decoration: const InputDecoration(
                         labelText: 'Номер дома',
                         border: OutlineInputBorder(),
                       ),
                       validator: (v) =>
                           v == null || v.isEmpty ? 'Введите номер дома' : null,
-                      onSaved: (v) => buildingNumber = v,
+                      onSaved: (v) => {},
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
+                      controller: _streetController,
                       decoration: const InputDecoration(
                         labelText: 'Номер улицы',
                         border: OutlineInputBorder(),
                       ),
                       validator: (v) =>
                           v == null || v.isEmpty ? 'Введите номер улицы' : null,
-                      onSaved: (v) => streetNumber = v,
+                      onSaved: (v) => {},
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
+                      controller: _apartmentController,
                       decoration: const InputDecoration(
                         labelText: 'Квартира',
                         border: OutlineInputBorder(),
                       ),
-                      onSaved: (v) => apartmentNumber = v,
+                      onSaved: (v) => {},
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
+                      controller: _detailsController,
                       decoration: const InputDecoration(
                         labelText: 'Детали (например, подъезд, этаж)',
                         border: OutlineInputBorder(),
                       ),
-                      onSaved: (v) => details = v,
+                      onSaved: (v) => {},
                     ),
                     const SizedBox(height: 24),
                     Text(

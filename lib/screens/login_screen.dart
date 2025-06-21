@@ -71,110 +71,205 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Вход'),
-        centerTitle: true,
-        actions: [
-          ValueListenableBuilder<ThemeMode>(
-            valueListenable: themeNotifier,
-            builder: (context, mode, _) {
-              IconData icon;
-              switch (mode) {
-                case ThemeMode.dark:
-                  icon = Icons.dark_mode;
-                  break;
-                case ThemeMode.light:
-                  icon = Icons.light_mode;
-                  break;
-                default:
-                  icon = Icons.brightness_auto;
-              }
-              return IconButton(
-                icon: Icon(icon),
-                tooltip: 'Change theme',
-                onPressed: () {
-                  ThemeMode newMode;
-                  if (mode == ThemeMode.system) {
-                    newMode = ThemeMode.light;
-                  } else if (mode == ThemeMode.light) {
-                    newMode = ThemeMode.dark;
-                  } else {
-                    newMode = ThemeMode.system;
-                  }
-                  themeNotifier.value = newMode;
-                },
-              );
-            },
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              theme.colorScheme.primary.withOpacity(0.1),
+              theme.colorScheme.background,
+            ],
           ),
-        ],
-      ),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.eco, size: 64, color: theme.colorScheme.primary),
-                const SizedBox(height: 24),
-                TextFormField(
-                  decoration: const InputDecoration(
-                    labelText: 'Электронная почта',
-                    border: OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (value) => value != null && value.contains('@')
-                      ? null
-                      : 'Введите корректный email',
-                  onChanged: (value) => _email = value,
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  decoration: InputDecoration(
-                    labelText: 'Пароль',
-                    border: const OutlineInputBorder(),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscurePassword
-                            ? Icons.visibility_off
-                            : Icons.visibility,
+        ),
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24.0),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Logo and Welcome Section
+                    Container(
+                      padding: const EdgeInsets.all(32),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surface,
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 20,
+                            offset: const Offset(0, 10),
+                          ),
+                        ],
                       ),
-                      onPressed: () {
-                        setState(() {
-                          _obscurePassword = !_obscurePassword;
-                        });
-                      },
+                      child: Column(
+                        children: [
+                          // Logo
+                          Container(
+                            width: 80,
+                            height: 80,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  theme.colorScheme.primary,
+                                  theme.colorScheme.secondary,
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: const Icon(
+                              Icons.eco,
+                              size: 40,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+
+                          // Welcome Text
+                          Text(
+                            'Добро пожаловать',
+                            style: theme.textTheme.headlineMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Войдите в свой аккаунт',
+                            style: theme.textTheme.bodyLarge?.copyWith(
+                              color:
+                                  theme.colorScheme.onSurface.withOpacity(0.7),
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 32),
+
+                          // Email Field
+                          TextFormField(
+                            decoration: InputDecoration(
+                              labelText: 'Электронная почта',
+                              prefixIcon: Icon(
+                                Icons.email_outlined,
+                                color: theme.colorScheme.primary,
+                              ),
+                              hintText: 'example@email.com',
+                            ),
+                            keyboardType: TextInputType.emailAddress,
+                            validator: (value) =>
+                                value != null && value.contains('@')
+                                    ? null
+                                    : 'Введите корректный email',
+                            onChanged: (value) => _email = value,
+                          ),
+                          const SizedBox(height: 20),
+
+                          // Password Field
+                          TextFormField(
+                            decoration: InputDecoration(
+                              labelText: 'Пароль',
+                              prefixIcon: Icon(
+                                Icons.lock_outlined,
+                                color: theme.colorScheme.primary,
+                              ),
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _obscurePassword
+                                      ? Icons.visibility_off
+                                      : Icons.visibility,
+                                  color: theme.colorScheme.primary,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _obscurePassword = !_obscurePassword;
+                                  });
+                                },
+                              ),
+                            ),
+                            obscureText: _obscurePassword,
+                            validator: (value) =>
+                                value != null && value.length >= 6
+                                    ? null
+                                    : 'Пароль слишком короткий',
+                            onChanged: (value) => _password = value,
+                          ),
+                          const SizedBox(height: 32),
+
+                          // Login Button
+                          SizedBox(
+                            width: double.infinity,
+                            height: 56,
+                            child: ElevatedButton(
+                              onPressed: _isLoading ? null : _login,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: theme.colorScheme.primary,
+                                foregroundColor: Colors.white,
+                                elevation: 8,
+                                shadowColor:
+                                    theme.colorScheme.primary.withOpacity(0.3),
+                              ),
+                              child: _isLoading
+                                  ? const SizedBox(
+                                      width: 24,
+                                      height: 24,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                          Colors.white,
+                                        ),
+                                      ),
+                                    )
+                                  : const Text(
+                                      'Войти',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  obscureText: _obscurePassword,
-                  validator: (value) => value != null && value.length >= 6
-                      ? null
-                      : 'Пароль слишком короткий',
-                  onChanged: (value) => _password = value,
+
+                    const SizedBox(height: 24),
+
+                    // Register Link
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Нет аккаунта? ',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSurface.withOpacity(0.7),
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pushReplacement(
+                              MaterialPageRoute(
+                                builder: (context) => const RegisterScreen(),
+                              ),
+                            );
+                          },
+                          child: Text(
+                            'Зарегистрируйтесь',
+                            style: TextStyle(
+                              color: theme.colorScheme.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _isLoading ? null : _login,
-                    child: _isLoading
-                        ? const CircularProgressIndicator()
-                        : const Text('Войти'),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(
-                        builder: (context) => const RegisterScreen(),
-                      ),
-                    );
-                  },
-                  child: const Text('Нет аккаунта? Зарегистрируйтесь'),
-                ),
-              ],
+              ),
             ),
           ),
         ),
